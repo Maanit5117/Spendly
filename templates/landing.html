@@ -18,6 +18,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Start tracking free</a>
+            <a href="#" class="btn-ghost" id="open-video-modal">See how it works</a>
             <a href="{{ url_for('login') }}" class="btn-ghost">Sign in</a>
         </div>
     </div>
@@ -89,4 +90,65 @@
     </div>
 </section>
 
+<!-- Video Modal Overlay -->
+<div id="video-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 15, 0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(12px); opacity: 0; transition: opacity 0.3s ease;">
+    <div class="modal-content" style="position: relative; width: 90%; max-width: 800px; aspect-ratio: 16/9; background: #000; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-soft); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transform: scale(0.95); transition: transform 0.3s ease;">
+        <button id="close-modal" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 255, 255, 0.15); border: none; color: #fff; font-size: 1.25rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1010; transition: background 0.2s, transform 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='rgba(255,255,255,0.15)'; this.style.transform='scale(1)';">&times;</button>
+        <iframe id="modal-video-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%; display: block;"></iframe>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const openBtn = document.getElementById('open-video-modal');
+    const modal = document.getElementById('video-modal');
+    const closeBtn = document.getElementById('close-modal');
+    const iframe = document.getElementById('modal-video-iframe');
+    const videoSrc = "https://www.youtube.com/embed/dQw4w9WgXcQ"; // Placeholder YouTube video
+
+    openBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        iframe.src = videoSrc + "?autoplay=1";
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Force reflow
+        modal.offsetHeight;
+        
+        // Trigger transitions
+        modal.style.opacity = '1';
+        modal.querySelector('.modal-content').style.transform = 'scale(1)';
+    });
+
+    function closeModal() {
+        modal.style.opacity = '0';
+        modal.querySelector('.modal-content').style.transform = 'scale(0.95)';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
+            iframe.src = '';
+            document.body.style.overflow = '';
+        }, 300);
+    }
+
+    closeBtn.addEventListener('click', closeModal);
+
+    // Close when clicking outside the modal content
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close on Escape key press
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}
