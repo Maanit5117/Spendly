@@ -96,3 +96,46 @@ def test_get_category_breakdown_no_expenses(setup_users):
     user_id = setup_users["no_expense_user_id"]
     breakdown = get_category_breakdown(user_id)
     assert breakdown == []
+
+
+def test_queries_with_date_range(setup_users):
+    user_id = setup_users["demo_user_id"]
+    # Range that includes: 2026-06-05 through 2026-06-10
+    start_date = "2026-06-05"
+    end_date = "2026-06-10"
+    
+    # 1. Summary stats
+    stats = get_summary_stats(user_id, start_date=start_date, end_date=end_date)
+    assert stats["transaction_count"] == 4
+    assert stats["total_spent"] == 252.50
+    assert stats["top_category"] == "Bills"
+    
+    # 2. Recent transactions
+    txs = get_recent_transactions(user_id, limit=10, start_date=start_date, end_date=end_date)
+    assert len(txs) == 4
+    assert txs[0]["date"] == "2026-06-10"
+    assert txs[-1]["date"] == "2026-06-05"
+    
+    # 3. Category breakdown
+    breakdown = get_category_breakdown(user_id, start_date=start_date, end_date=end_date)
+    # Categories: Bills (120.00), Shopping (65.50), Health (45.00), Entertainment (22.00)
+    # Total spent: 252.50
+    # Percentages:
+    # Bills: 120 / 252.5 = 47.52% -> 48%
+    # Shopping: 65.5 / 252.5 = 25.94% -> 26%
+    # Health: 45 / 252.5 = 17.82% -> 18%
+    # Entertainment: 22 / 252.5 = 8.71% -> 9%
+    # Sum: 48 + 26 + 18 + 9 = 101% -> adjustment makes Bills 47%
+    assert len(breakdown) == 4
+    assert breakdown[0]["name"] == "Bills"
+    assert breakdown[0]["pct"] == 47
+    assert breakdown[1]["name"] == "Shopping"
+    assert breakdown[1]["pct"] == 26
+    assert breakdown[2]["name"] == "Health"
+    assert breakdown[2]["pct"] == 18
+    assert breakdown[3]["name"] == "Entertainment"
+    assert breakdown[3]["pct"] == 9
+    
+    total_pct = sum(item["pct"] for item in breakdown)
+    assert total_pct == 100
+

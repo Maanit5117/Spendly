@@ -201,5 +201,36 @@ def test_new_user_profile_no_expenses(client):
     assert b"progress-bar-element" not in response.data
 
 
+def test_profile_custom_date_filter(client):
+    """Verify that visiting /profile with a custom date range filters stats and transactions correctly."""
+    # Log in first
+    client.post("/login", data={
+        "email": "demo@spendly.com",
+        "password": "demo123"
+    })
+    
+    # Custom filter range: 2026-06-05 to 2026-06-10
+    response = client.get("/profile?filter=custom&start_date=2026-06-05&end_date=2026-06-10")
+    assert response.status_code == 200
+    
+    # Check stats are filtered
+    assert b"252.50" in response.data
+    assert b"4" in response.data
+    assert b"Bills" in response.data
+    
+    # Check filtered transactions are present
+    assert b"Pharmacy" in response.data
+    assert b"Movie ticket" in response.data
+    assert b"New shoes" in response.data
+    assert b"Electricity bill" in response.data
+    
+    # Check non-filtered transactions are NOT present in the response
+    assert b"Groceries" not in response.data
+    assert b"Notebook" not in response.data
+    assert b"Bus fare" not in response.data
+    assert b"Lunch at cafe" not in response.data
+
+
+
 
 

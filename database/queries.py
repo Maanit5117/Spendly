@@ -44,7 +44,7 @@ def get_user_by_id(user_id):
     finally:
         conn.close()
 
-def get_summary_stats(user_id):
+def get_summary_stats(user_id, start_date=None, end_date=None):
     """
     Retrieves summary stats for a user's expenses.
     Returns a dict with 'total_spent', 'transaction_count', and 'top_category'.
@@ -53,11 +53,16 @@ def get_summary_stats(user_id):
     conn = get_db()
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT SUM(amount) as total_spent, COUNT(*) as transaction_count
-            FROM expenses
-            WHERE user_id = ?;
-        """, (user_id,))
+        query = "SELECT SUM(amount) as total_spent, COUNT(*) as transaction_count FROM expenses WHERE user_id = ?"
+        params = [user_id]
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+            
+        cursor.execute(query, tuple(params))
         row = cursor.fetchone()
         
         total_spent = row["total_spent"] if row["total_spent"] is not None else 0
@@ -70,15 +75,19 @@ def get_summary_stats(user_id):
                 "top_category": "—"
             }
             
-        # Top category (highest single-category total sum of amount)
-        cursor.execute("""
-            SELECT category, SUM(amount) as cat_total
-            FROM expenses
-            WHERE user_id = ?
-            GROUP BY category
-            ORDER BY cat_total DESC, category ASC
-            LIMIT 1;
-        """, (user_id,))
+        # Top category query (highest single-category total sum of amount)
+        cat_query = "SELECT category, SUM(amount) as cat_total FROM expenses WHERE user_id = ?"
+        cat_params = [user_id]
+        if start_date:
+            cat_query += " AND date >= ?"
+            cat_params.append(start_date)
+        if end_date:
+            cat_query += " AND date <= ?"
+            cat_params.append(end_date)
+            
+        cat_query += " GROUP BY category ORDER BY cat_total DESC, category ASC LIMIT 1;"
+        
+        cursor.execute(cat_query, tuple(cat_params))
         cat_row = cursor.fetchone()
         top_category = cat_row["category"] if cat_row else "—"
         
@@ -90,7 +99,7 @@ def get_summary_stats(user_id):
     finally:
         conn.close()
 
-def get_recent_transactions(user_id, limit=10):
+def get_recent_transactions(user_id, limit=10, start_date=None, end_date=None):
     """
     Retrieves the most recent transactions for a user.
     Returns a list of dicts ordered newest-first.
@@ -98,13 +107,19 @@ def get_recent_transactions(user_id, limit=10):
     conn = get_db()
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT date, description, category, amount
-            FROM expenses
-            WHERE user_id = ?
-            ORDER BY date DESC, id DESC
-            LIMIT ?;
-        """, (user_id, limit))
+        query = "SELECT date, description, category, amount FROM expenses WHERE user_id = ?"
+        params = [user_id]
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+            
+        query += " ORDER BY date DESC, id DESC LIMIT ?"
+        params.append(limit)
+        
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
         return [
             {
@@ -118,7 +133,7 @@ def get_recent_transactions(user_id, limit=10):
     finally:
         conn.close()
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, start_date=None, end_date=None):
     """
     Retrieves category breakdown for a user's expenses.
     Returns a list of dicts, each with 'name', 'amount', and 'pct'.
@@ -127,13 +142,18 @@ def get_category_breakdown(user_id):
     conn = get_db()
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT category as name, SUM(amount) as amount
-            FROM expenses
-            WHERE user_id = ?
-            GROUP BY category
-            ORDER BY amount DESC;
-        """, (user_id,))
+        query = "SELECT category as name, SUM(amount) as amount FROM expenses WHERE user_id = ?"
+        params = [user_id]
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+            
+        query += " GROUP BY category ORDER BY amount DESC;"
+        
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
         if not rows:
             return []

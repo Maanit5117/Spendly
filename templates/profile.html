@@ -33,6 +33,32 @@
 
     <!-- Main Content: Stats Row & Recent Transactions -->
     <main class="profile-main">
+        <!-- Date Filter Card -->
+        <div class="filter-card">
+            <div class="filter-presets">
+                <a href="{{ url_for('profile', filter='all_time') }}" class="filter-btn {% if active_filter == 'all_time' %}active{% endif %}">All Time</a>
+                <a href="{{ url_for('profile', filter='last_month') }}" class="filter-btn {% if active_filter == 'last_month' %}active{% endif %}">Last Month</a>
+                <a href="{{ url_for('profile', filter='last_3_months') }}" class="filter-btn {% if active_filter == 'last_3_months' %}active{% endif %}">Last 3 Months</a>
+                <a href="{{ url_for('profile', filter='last_6_months') }}" class="filter-btn {% if active_filter == 'last_6_months' %}active{% endif %}">Last 6 Months</a>
+                <button type="button" id="custom-filter-toggle" class="filter-btn {% if active_filter == 'custom' %}active{% endif %}">Custom Range</button>
+            </div>
+            
+            <form id="custom-date-form" class="custom-date-form {% if active_filter != 'custom' %}hidden{% endif %}" method="GET" action="{{ url_for('profile') }}">
+                <input type="hidden" name="filter" value="custom">
+                <div class="form-inputs-row">
+                    <div class="date-input-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ start_date or '' }}" class="date-field">
+                    </div>
+                    <div class="date-input-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ end_date or '' }}" class="date-field">
+                    </div>
+                    <button type="submit" class="btn-apply-filter">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+
         <!-- 2. Summary Stats Row -->
         <div class="stats-grid">
             <div class="stat-card">

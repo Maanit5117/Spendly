@@ -117,6 +117,7 @@ def logout():
 
 @app.route("/profile")
 def profile():
+    import datetime
     user_id = session.get("user_id")
     if not user_id:
         return redirect(url_for("login"))
@@ -137,14 +138,37 @@ def profile():
         "joined_date": user_db["member_since"]
     }
 
-    db_stats = get_summary_stats(user_id)
+    # Date range filtering logic
+    active_filter = request.args.get("filter", "all_time")
+    start_date = None
+    end_date = None
+    custom_start = request.args.get("start_date", "").strip()
+    custom_end = request.args.get("end_date", "").strip()
+    
+    today = datetime.date.today()
+    if active_filter == "last_month":
+        start_date = (today - datetime.timedelta(days=30)).isoformat()
+        end_date = today.isoformat()
+    elif active_filter == "last_3_months":
+        start_date = (today - datetime.timedelta(days=90)).isoformat()
+        end_date = today.isoformat()
+    elif active_filter == "last_6_months":
+        start_date = (today - datetime.timedelta(days=180)).isoformat()
+        end_date = today.isoformat()
+    elif active_filter == "custom":
+        if custom_start:
+            start_date = custom_start
+        if custom_end:
+            end_date = custom_end
+
+    db_stats = get_summary_stats(user_id, start_date=start_date, end_date=end_date)
     stats = {
         "total_spent": f"₹{db_stats['total_spent']:,.2f}",
         "transaction_count": db_stats["transaction_count"],
         "top_category": db_stats["top_category"]
     }
 
-    db_recent = get_recent_transactions(user_id, limit=10)
+    db_recent = get_recent_transactions(user_id, limit=10, start_date=start_date, end_date=end_date)
     recent_expenses = [
         {
             "date": r["date"],
@@ -155,7 +179,7 @@ def profile():
         for r in db_recent
     ]
 
-    db_categories = get_category_breakdown(user_id)
+    db_categories = get_category_breakdown(user_id, start_date=start_date, end_date=end_date)
     categories = [
         {
             "name": cat["name"],
@@ -170,7 +194,10 @@ def profile():
         user=user_data,
         stats=stats,
         recent_expenses=recent_expenses,
-        categories=categories
+        categories=categories,
+        active_filter=active_filter,
+        start_date=custom_start,
+        end_date=custom_end
     )
 
 
