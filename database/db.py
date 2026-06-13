@@ -64,7 +64,7 @@ def seed_db():
         (user_id, 22.00, "Entertainment", "2026-06-09", "Movie ticket"),
         (user_id, 65.50, "Shopping", "2026-06-10", "New shoes"),
         (user_id, 10.00, "Other", "2026-06-12", "Notebook"),
-        (user_id, 32.40, "Food", "2026-06-13", "Groceries")
+        (user_id, 62.49, "Food", "2026-06-13", "Groceries")
     ]
     
     cursor.executemany(
