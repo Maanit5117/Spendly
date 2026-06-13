@@ -17,16 +17,6 @@
             <div class="auth-error">{{ error }}</div>
             {% endif %}
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="{% if category == 'success' %}auth-success{% else %}auth-error{% endif %}">
-                    {{ message }}
-                  </div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-
             <form method="POST" action="{{ url_for('register') }}">
                 <div class="form-group">
                     <label for="name">Full name</label>

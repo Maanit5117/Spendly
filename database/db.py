@@ -94,3 +94,18 @@ def create_user(name, email, password):
     finally:
         db.close()
 
+
+def get_user_by_email(email):
+    """
+    Retrieves a user row by email. Returns a dict-like sqlite3.Row object
+    if found, or None if not found.
+    """
+    db = get_db()
+    try:
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?;", (email,))
+        return cursor.fetchone()
+    finally:
+        db.close()
+
+
